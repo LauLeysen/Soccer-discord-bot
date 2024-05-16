@@ -149,11 +149,11 @@ async def update_live_scores():
 
                     # Check for score change and ping the role
                     if match_key in previous_scores and previous_scores[match_key] != current_score:
-                        await channel.send(f"{role.mention} {match['home_team']} vs {match['away_team']} score changed: {previous_scores[match_key]} -> {current_score}")
+                        await channel.send(f"{role.mention} {match['home_team']} vs {match['away_team']} score changed: {previous_scores[match_key]} -> {current_score}", delete_after=1800)
                     
                     # Check for match end and ping the role
                     if match_key in previous_statuses and previous_statuses[match_key] in ["Live", "Halftime"] and current_status == "Finished":
-                        await channel.send(f"{role.mention} {match['home_team']} vs {match['away_team']} has ended with a score of {current_score}")
+                        await channel.send(f"{role.mention} {match['home_team']} vs {match['away_team']} has ended with a score of {current_score}", delete_after=1800)
 
                     previous_scores[match_key] = current_score
                     previous_statuses[match_key] = current_status
