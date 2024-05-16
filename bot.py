@@ -81,7 +81,7 @@ async def upcoming(ctx):
         async with session.get(f'{API_BASE_URL}/upcoming') as resp:
             if resp.status == 200:
                 data = await resp.json()
-                message = "\n\n".join([f"**{match['home_team']} vs {match['away_team']}**\nStart Time: {match['start_time']}" for match in data])
+                message = "\n\n".join([f"**{match['home_team']} vs {match['away_team']}**\n {match['status']}" for match in data])
                 embed = discord.Embed(title="Upcoming Matches", description=message, color=0x0000ff)
                 await ctx.send(embed=embed if message else "No upcoming matches found.")
             else:
