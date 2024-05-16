@@ -3,6 +3,15 @@
 
 This is a Discord bot designed to provide live football match data. It fetches information from a custom API and updates users in real-time about ongoing, upcoming, and finished matches. The bot is built using the `discord.py` library.
 
+## API and Data Scraping
+
+The bot relies on an external API for match data. The API and the data scraping mechanism are implemented in the following repositories:
+
+- **API**: [football-api](https://github.com/MrSopia/football-api)
+- **Data Scraping**: [livescore-scraper](https://github.com/MrSopia/livescore-scraper)
+
+Ensure that the API is up and running, and the data scraper is populating the API with live match data.
+
 ## Features
 
 - **Ping Command**: Responds with "Pong!" to check if the bot is active.
@@ -65,15 +74,6 @@ This is a Discord bot designed to provide live football match data. It fetches i
 ## Background Task
 
 The bot includes a background task that periodically updates live match scores in the specified channel every 10 seconds. It also sends notifications when scores change or matches end, mentioning a role named `pinglive` if it exists.
-
-## API and Data Scraping
-
-The bot relies on an external API for match data. The API and the data scraping mechanism are implemented in the following repositories:
-
-- **API**: [football-api](https://github.com/MrSopia/football-api)
-- **Data Scraping**: [livescore-scraper](https://github.com/MrSopia/livescore-scraper)
-
-Ensure that the API is up and running, and the data scraper is populating the API with live match data.
 
 ## Contributing
 
