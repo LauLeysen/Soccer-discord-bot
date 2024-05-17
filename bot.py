@@ -22,7 +22,9 @@ bot = commands.Bot(command_prefix='/', description=description, intents=intents)
 
 # Global variables to keep track of the update channel and message
 update_channel_id = None
+update_channel_id2 = None
 live_message_id = None
+upcoming_message_id = None
 previous_scores = {}
 previous_statuses = {}
 
@@ -31,6 +33,7 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
     update_live_scores.start()  # Start the task to update live scores periodically
+    update_upcoming_matches.start()  # Start the task to update upcoming matches periodically
 
 @bot.command(description="Replies with Pong!")
 async def ping(ctx):
@@ -77,13 +80,16 @@ async def live(ctx):
 
 @bot.command(description="Get all upcoming matches")
 async def upcoming(ctx):
+    global update_channel_id2, upcoming_message_id
+    update_channel_id2 = ctx.channel.id
     async with aiohttp.ClientSession() as session:
         async with session.get(f'{API_BASE_URL}/upcoming') as resp:
             if resp.status == 200:
                 data = await resp.json()
-                message = "\n\n".join([f"**{match['home_team']} vs {match['away_team']}**\n {match['status']}" for match in data])
+                message = "\n\n".join([f"**{match['home_team']} vs {match['away_team']}**\n {match['status']} @ {match['start_time']}" for match in data])
                 embed = discord.Embed(title="Upcoming Matches", description=message, color=0x0000ff)
-                await ctx.send(embed=embed if message else "No upcoming matches found.")
+                msg = await ctx.send(embed=embed)
+                upcoming_message_id = msg.id
             else:
                 await ctx.send("Failed to fetch upcoming matches.")
 
@@ -113,15 +119,6 @@ async def match(ctx, team: str):
                     await ctx.send(f"No live matches found for team: {team}")
             else:
                 await ctx.send(f"Failed to fetch live matches for team: {team}")
-
-@bot.command(description="Start updating live match scores in this channel")
-async def start_updates(ctx):
-    global update_channel_id, live_message_id
-    update_channel_id = ctx.channel.id
-    async with ctx.channel.typing():
-        msg = await ctx.send("Starting live match updates...")
-        live_message_id = msg.id
-    await ctx.send("Live match updates started!")
 
 @tasks.loop(seconds=10)
 async def update_live_scores():
@@ -169,6 +166,30 @@ async def update_live_scores():
         except discord.NotFound:
             msg = await channel.send(embed=embed)
             live_message_id = msg.id
+
+@tasks.loop(seconds=30)
+async def update_upcoming_matches():
+    global upcoming_message_id
+    if update_channel_id2 is None:
+        return
+    channel = bot.get_channel(update_channel_id2)
+    if channel is None:
+        return
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f'{API_BASE_URL}/upcoming') as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                message = "\n\n".join([f"**{match['home_team']} vs {match['away_team']}**\n {match['status']} @ {match['start_time']}" for match in data])
+                embed = discord.Embed(title="Upcoming Matches", description=message, color=0x0000ff)
+            else:
+                embed = discord.Embed(title="Error", description="Failed to fetch upcoming matches.", color=0xff0000)
+
+        try:
+            msg = await channel.fetch_message(upcoming_message_id)
+            await msg.edit(embed=embed)
+        except discord.NotFound:
+            msg = await channel.send(embed=embed)
+            upcoming_message_id = msg.id
 
 # Run the bot
 bot.run(TOKEN)
